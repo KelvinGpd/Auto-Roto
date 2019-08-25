@@ -1,3 +1,4 @@
+##https://github.com/riyasavla/Image-Editor
 from tkinter import *
 import os
 import ctypes
@@ -10,67 +11,19 @@ from tkinter import messagebox
 import imghdr
 from collections import *
 
-"""
-CITATIONS
-I found the command for changing the desktop background from this webpage:
-http://stackoverflow.com/questions/14426475/change-wallpaper-in-python-for-user-while-being-system
-"""
-
-
 ################ DRAW ################
 
 def drawOnImage(canvas):
     canvas.data.colourPopToHappen = False
     canvas.data.cropPopToHappen = False
     canvas.data.drawOn = True
-    drawWindow = Toplevel(canvas.data.mainWindow)
-    drawWindow.title = "Draw"
-    drawFrame = Frame(drawWindow)
-    redButton = Button(drawFrame, bg="red", width=2, \
-                       command=lambda: colourChosen(drawWindow, canvas, "red"))
-    redButton.grid(row=0, column=0)
-    blueButton = Button(drawFrame, bg="blue", width=2, \
-                        command=lambda: colourChosen(drawWindow, canvas, "blue"))
-    blueButton.grid(row=0, column=1)
-    greenButton = Button(drawFrame, bg="green", width=2, \
-                         command=lambda: colourChosen(drawWindow, canvas, "green"))
-    greenButton.grid(row=0, column=2)
-    magentaButton = Button(drawFrame, bg="magenta", width=2, \
-                           command=lambda: colourChosen(drawWindow, canvas, "magenta"))
-    magentaButton.grid(row=1, column=0)
-    cyanButton = Button(drawFrame, bg="cyan", width=2, \
-                        command=lambda: colourChosen(drawWindow, canvas, "cyan"))
-    cyanButton.grid(row=1, column=1)
-    yellowButton = Button(drawFrame, bg="yellow", width=2, \
-                          command=lambda: colourChosen(drawWindow, canvas, "yellow"))
-    yellowButton.grid(row=1, column=2)
-    orangeButton = Button(drawFrame, bg="orange", width=2, \
-                          command=lambda: colourChosen(drawWindow, canvas, "orange"))
-    orangeButton.grid(row=2, column=0)
-    purpleButton = Button(drawFrame, bg="purple", width=2, \
-                          command=lambda: colourChosen(drawWindow, canvas, "purple"))
-    purpleButton.grid(row=2, column=1)
-    brownButton = Button(drawFrame, bg="brown", width=2, \
-                         command=lambda: colourChosen(drawWindow, canvas, "brown"))
-    brownButton.grid(row=2, column=2)
-    blackButton = Button(drawFrame, bg="black", width=2, \
-                         command=lambda: colourChosen(drawWindow, canvas, "black"))
-    blackButton.grid(row=3, column=0)
-    whiteButton = Button(drawFrame, bg="white", width=2, \
-                         command=lambda: colourChosen(drawWindow, canvas, "white"))
-    whiteButton.grid(row=3, column=1)
-    grayButton = Button(drawFrame, bg="gray", width=2, \
-                        command=lambda: colourChosen(drawWindow, canvas, "gray"))
-    grayButton.grid(row=3, column=2)
-    drawFrame.pack(side=BOTTOM)
+    colourChosen(canvas, "cyan")
 
-
-def colourChosen(drawWindow, canvas, colour):
+def colourChosen(canvas, colour):
     if canvas.data.image != None:
         canvas.data.drawColour = colour
         canvas.data.mainWindow.bind("<B1-Motion>", \
                                     lambda event: drawDraw(event, canvas))
-    drawWindow.destroy()
     clickedPositions.clear()
 
 clickedPositions = list()
@@ -116,11 +69,6 @@ def keyPressed(canvas, event):
     elif event.keysym == "y":
         redo(canvas)
 
-
-# we use deques so as to make Undo and Redo more efficient and avoid
-# memory space isuues
-# after each change, we append the new version of the image to
-# the Undo queue
 def undo(canvas):
     if len(canvas.data.undoQueue) > 0:
         # the last element of the Undo Deque is the
@@ -165,16 +113,14 @@ def save(canvas):
         im.save(canvas.data.imageLocation)
 
 
-def newImage(canvas):
+def importImage(canvas):
     imageName = filedialog.askopenfilename()
     filetype = ""
-    # make sure it's an image file
     try:
         filetype = imghdr.what(imageName)
     except:
         messagebox.showinfo(title="Image File", \
                               message="Choose an Image File!", parent=canvas.data.mainWindow)
-    # restrict filetypes to .jpg, .bmp, etc.
     if filetype in ['jpeg', 'bmp', 'png', 'tiff']:
         canvas.data.imageLocation = imageName
         im = Image.open(imageName)
@@ -264,7 +210,7 @@ def buttonsInit(root, canvas):
 
 def menuInit(root, canvas):
     menubar = Menu(root)
-    menubar.add_command(label="New", command=lambda: newImage(canvas))
+    menubar.add_command(label="New", command=lambda: importImage(canvas))
     menubar.add_command(label="Save", command=lambda: save(canvas))
     menubar.add_command(label="Save As", command=lambda: saveAs(canvas))
     ## Edit pull-down Menu
