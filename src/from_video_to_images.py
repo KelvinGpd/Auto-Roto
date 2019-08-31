@@ -9,7 +9,6 @@ def FrameCapture(path):
     while success:
         success, image = video.read()
         cv2.imwrite("C:\\apps\\opencv\\sources\\samples\\data\\images\\frame%d.jpg" % count, image)
-        #cv2.imwrite('/path/to/destination/image.png', image)
         count += 1
 if __name__ == '__main__':
     FrameCapture("C:\\apps\\opencv\\sources\\samples\\data\\vtest.avi")
