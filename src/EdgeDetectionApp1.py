@@ -14,6 +14,32 @@ from collections import *
 
 ################ DRAW ################
 
+def showEdges(canvas):
+    draw = ImageDraw.Draw(canvas.data.image)
+
+    edges = canvas.data.edges
+    for i in range(len(edges)):
+        for j in range(len(edges[0])):
+            if edges[i, j] == True:
+                draw.point((j, i))
+
+    canvas.data.undoQueue.append(canvas.data.image.copy())
+    canvas.data.imageForTk = makeImageForTk(canvas)
+    drawImage(canvas)
+
+def selectEdge(canvas):
+    if canvas.data.image != None:
+        canvas.data.mainWindow.unbind("<ButtonPress-1>")
+        canvas.data.mainWindow.bind("<Button-1>", \
+                                    lambda event: select(event, canvas))
+        canvas.data.mainWindow.unbind("<ButtonRelease-1>")
+
+def deselectEdge(canvas):
+    if canvas.data.image != None:
+        canvas.data.mainWindow.bind("<ButtonPress-1>", lambda event: onDeselectStart(event, canvas))
+        #canvas.data.mainWindow.unbind("<Button-1>")
+        canvas.data.mainWindow.bind("<ButtonRelease-1>", lambda event: onDeselectEnd(event, canvas))
+
 def drawOnImage(canvas):
     canvas.data.colourPopToHappen = False
     canvas.data.cropPopToHappen = False
@@ -27,6 +53,155 @@ def colourChosen(canvas):
     clickedPositions.clear()
 
 clickedPositions = list()
+
+selectedPoints = list()
+
+def select(event, canvas):
+    x = int(round((event.x - canvas.data.imageTopX) * canvas.data.imageScale))
+    y = int(round((event.y - canvas.data.imageTopY) * canvas.data.imageScale))
+    clickedPositions.append((x, y))
+    draw = ImageDraw.Draw(canvas.data.image)
+
+    edges = canvas.data.edges
+    startPoint = findClosestPoint((x,y), edges)
+    #for i in range(len(edges)):
+    #    for j in range(len(edges[0])):
+    #        if edges[i, j] == True and abs(i - startPoint[1]) < 20 and abs(j - startPoint[0]) < 20:
+    #            draw.point((j, i))
+
+    x = startPoint[0]
+    y = startPoint[1]
+    dist = 50
+    w = canvas.data.width
+    h = canvas.data.height
+    range = ((x - dist if x >= dist else 0, y - dist if y >= dist else 0),
+             (x + dist if x + dist < w else w, y + dist if y + dist < h else h))
+    connectedPoints = findPoints((x, y), edges, range)
+    for p in connectedPoints:
+        selectedPoints.append(p)
+        draw.point(p)
+
+    canvas.data.undoQueue.append(canvas.data.image.copy())
+    canvas.data.imageForTk = makeImageForTk(canvas)
+    drawImage(canvas)
+
+deselect_startPoint = (-100, -100);
+def onDeselectStart(event, canvas):
+    x = int(round((event.x - canvas.data.imageTopX) * canvas.data.imageScale))
+    y = int(round((event.y - canvas.data.imageTopY) * canvas.data.imageScale))
+    global deselect_startPoint
+    deselect_startPoint = (x, y)
+
+def onDeselectEnd(event, canvas):
+    x = int(round((event.x - canvas.data.imageTopX) * canvas.data.imageScale))
+    y = int(round((event.y - canvas.data.imageTopY) * canvas.data.imageScale))
+    endPoint = (x, y)
+    global deselect_startPoint
+    removeSelectedPoints(deselect_startPoint, endPoint, canvas)
+    deselect_startPoint = (-100, -100)
+
+def removeSelectedPoints(x0y0, x1y1, canvas):
+    global selectedPoints
+    filteredPoints = list()
+    for (x, y) in selectedPoints:
+        if x >= x0y0[0] and x <= x1y1[0] and y >= x0y0[1] and y <= x1y1[1]:
+            filteredPoints.append((x, y))
+    selectedPoints = filteredPoints
+
+    canvas.data.colourPopToHappen = False
+    canvas.data.cropPopToHappen = False
+    canvas.data.drawOn = False
+    ### change back to original image
+    if canvas.data.image != None:
+        canvas.data.image = canvas.data.originalImage.copy()
+        canvas.data.imageForTk = makeImageForTk(canvas)
+        #drawImage(canvas)
+
+    draw = ImageDraw.Draw(canvas.data.image)
+    for (x, y) in selectedPoints:
+        draw.point((x, y))
+
+    #canvas.data.imageForTk = makeImageForTk(canvas)
+    drawImage(canvas)
+
+def findPoints(xy, edges, range):
+    visited = set()
+    points = set()
+    findConnectedPoints(xy, edges, points, visited, range)
+    return points
+
+def findConnectedPoints(xy, edges, points, visited, range):
+    visited.add(xy)
+    if edges[xy[1], xy[0]] == True:
+        points.add(xy)
+
+        print("add point: ", xy)
+
+        adjacent = (xy[0]-1, xy[1]-1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0], xy[1] - 1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0] + 1, xy[1] - 1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0] - 1, xy[1])
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0] + 1, xy[1])
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0] - 1, xy[1] + 1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0], xy[1] + 1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+        adjacent = (xy[0] + 1, xy[1] + 1)
+        if withinRange(adjacent, range) and adjacent not in visited:
+            findConnectedPoints(adjacent, edges, points, visited, range)
+
+def withinRange(xy, range):
+    return xy[0] >= range[0][0] and xy[0] <= range[1][0] and xy[1] >= range[0][1] and xy[1] <= range[1][1]
+
+
+def findClosestPoint(xy, edges):
+
+    for i in range (0, 10):
+        foundPoint = findClosestPointByDistance(xy, edges, i)
+        if edges[foundPoint[1], foundPoint[0]] == True:
+            return foundPoint
+
+    return xy
+
+
+def findClosestPointByDistance(xy, edges, distance):
+    for i in range(-distance, distance):
+        if isPixelHighlightable((xy[0]-distance, xy[1]+i), edges):
+            return (xy[0]-distance, xy[1]+i)
+
+        if isPixelHighlightable((xy[0]+distance, xy[1]+i), edges):
+            return (xy[0]+distance, xy[1]+i)
+
+        if isPixelHighlightable((xy[0]+i, xy[1]-distance), edges):
+            return (xy[0]+i, xy[1]-distance)
+
+        if isPixelHighlightable((xy[0]+i, xy[1]+distance), edges):
+            return (xy[0]+i, xy[1]+distance)
+
+    return xy
+
+def isPixelHighlightable(xy, edges):
+    dim = edges.shape
+    return xy[0] >= 0 and xy[0] <= dim[1] and xy[1] >= 0 and xy[1] <= dim[0] and edges[xy[1], xy[0]] == True
 
 def drawDraw(event, canvas):
     if canvas.data.drawOn == True:
@@ -202,18 +377,27 @@ def init(root, canvas):
 
 
 def buttonsInit(root, canvas):
-    backgroundColour = "white"
+
+    backgroundColour = "gray"
     buttonWidth = 14
     buttonHeight = 2
     toolKitFrame = Frame(root)
-    drawButton = Button(toolKitFrame, text="Draw", \
+    drawButton = Button(toolKitFrame, text="Show Edges", \
                         background=backgroundColour, width=buttonWidth, \
-                        height=buttonHeight, command=lambda: drawOnImage(canvas))
-    drawButton.grid(row=8, column=0)
-    resetButton = Button(toolKitFrame, text="Reset", \
+                        height=buttonHeight, command=lambda: showEdges(canvas))
+    drawButton.grid(row=1, column=0)
+    resetButton = Button(toolKitFrame, text="Clear Edges", \
                          background=backgroundColour, width=buttonWidth, \
                          height=buttonHeight, command=lambda: reset(canvas))
-    resetButton.grid(row=9, column=0)
+    resetButton.grid(row=2, column=0)
+    selectButton = Button(toolKitFrame, text="Select Edge", \
+                          background=backgroundColour, width=buttonWidth, \
+                          height=buttonHeight, command=lambda: selectEdge(canvas))
+    selectButton.grid(row=3, column=0)
+    deSelectButton = Button(toolKitFrame, text="De-select Edge", \
+                          background=backgroundColour, width=buttonWidth, \
+                          height=buttonHeight, command=lambda: deselectEdge(canvas))
+    deSelectButton.grid(row=4, column=0)
     toolKitFrame.pack(side=LEFT)
 
 
@@ -229,14 +413,31 @@ def menuInit(root, canvas):
     menubar.add_cascade(label="Edit", menu=editmenu)
     root.config(menu=menubar)
 
+class FullScreenApp(object):
+    def __init__(self, master, **kwargs):
+        self.master=master
+        pad=3
+        self._geom='200x200+0+0'
+        master.geometry("{0}x{1}+0+0".format(
+            master.winfo_screenwidth()-pad, master.winfo_screenheight()-pad))
+        master.bind('<Escape>',self.toggle_geom)
+    def toggle_geom(self,event):
+        geom=self.master.winfo_geometry()
+        print(geom,self._geom)
+        self.master.geometry(self._geom)
+        self._geom=geom
+
 def run():
     # create the root and the canvas
     root = Tk()
-    root.title("Image Editor")
-    canvasWidth = 500
-    canvasHeight = 500
+    root.title("Rotoscope.AI")
+    root.tk.call('wm', 'iconphoto', root._w, PhotoImage(file='../resouces/rotologo.png'))
+    #root.iconbitmap('../resouces/test1.ico')
+    canvasWidth = 1280
+    canvasHeight = 720
+
     canvas = Canvas(root, width=canvasWidth, height=canvasHeight, \
-                    background="gray")
+                    background='#282828')
 
     # Set up canvas data and call init
     class Struct: pass
@@ -248,6 +449,8 @@ def run():
     init(root, canvas)
     root.bind("<Key>", lambda event: keyPressed(canvas, event))
     # and launch the app
+
+    app = FullScreenApp(root)
     root.mainloop()  # This call BLOCKS (so your program waits)
 
 
