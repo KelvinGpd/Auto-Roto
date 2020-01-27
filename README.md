@@ -17,3 +17,8 @@ The program itself is based off Canny Edge Detection, a contrast-detecting metho
 4.Run "Auto-Roto"
 
 Alternatively, you can pip all the packages necessary and run the program using cmd
+
+
+
+# Mediagraphy (open source material)
+Program interface modified from: https://github.com/riyasavla/Image-Editor
