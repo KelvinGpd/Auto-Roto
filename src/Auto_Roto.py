@@ -1,4 +1,3 @@
-##https://github.com/riyasavla/Image-Editor
 from tkinter import *
 import os
 import ctypes
