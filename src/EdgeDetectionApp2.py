@@ -55,7 +55,7 @@ def isolateAction(canvas):
     for i in range(0, w):
         for j in range(0, h):
             if not inside_selection((i, j), points_in_map):
-                draw.point((i, j))
+                draw.point((i, j), fill = (128, 128, 128, 0))
 
     #canvas.data.undoQueue.append(canvas.data.image.copy())
     canvas.data.imageForTk = makeImageForTk(canvas)
