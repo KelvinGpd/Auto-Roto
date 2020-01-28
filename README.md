@@ -7,6 +7,11 @@ The program itself is based off Canny Edge Detection, a contrast-detecting metho
 
 
 
+# Mediagraphy (open source material)
+Program interface modified from: https://github.com/riyasavla/Image-Editor
+Canny Edge Detection code: https://scikit-image.org/docs/dev/auto_examples/edges/plot_canny.html
+
+
 # How To Install and Run
 1.Download and Unzip
 
@@ -17,8 +22,3 @@ The program itself is based off Canny Edge Detection, a contrast-detecting metho
 4.Run "Auto-Roto"
 
 Alternatively, you can pip all the packages necessary and run the program using cmd
-
-
-
-# Mediagraphy (open source material)
-Program interface modified from: https://github.com/riyasavla/Image-Editor
