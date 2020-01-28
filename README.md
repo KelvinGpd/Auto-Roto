@@ -9,6 +9,7 @@ The program itself is based off Canny Edge Detection, a contrast-detecting metho
 
 # Mediagraphy (open source material)
 Program interface modified from: https://github.com/riyasavla/Image-Editor
+
 Canny Edge Detection code: https://scikit-image.org/docs/dev/auto_examples/edges/plot_canny.html
 
 
