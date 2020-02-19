@@ -1,6 +1,6 @@
 # Auto-Roto
 Auto-Roto helps making masking easier by detecting edges of objects in imagery. 
-It allows its user to select the object he wants segmented, and isolate it from the rest of the image. It can make the painful process of 
+It allows its user to select the object they want segmented, and isolate it from the rest of the image. It can make the painful process of 
 manually drawing contours less time consuming.
 
 The program itself is based off Canny Edge Detection, a contrast-detecting method that singles out most edges in high-contrast images.
