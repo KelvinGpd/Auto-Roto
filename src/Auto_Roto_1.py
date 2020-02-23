@@ -87,24 +87,16 @@ def inside_selection(point, boundary_points):
             if x == y_points[i][0]:
                 return True
 
-        grp_numbers = 0
-        grp_position = 0
+        total_grp_points = 1
+        grp_position = 1
         for i in range(0, len(y_points)):
-            grp_numbers = grp_numbers + 1
-            while ((i + 1) < len(y_points)) and ((y_points[i + 1][0] - y_points[i][0]) <= 3):
+            total_grp_points = total_grp_points + 1
+            while i < len(y_points) - 1 and (y_points[i+1][0] - y_points[i][0] <= 2):
                 i = i + 1
+            if x > y_points[i][0]:
+                grp_position = total_grp_points
+        return grp_position % 2 != 0
 
-            if y_points[i][0] > x and grp_numbers == 0:
-                grp_position = grp_numbers
-
-        if grp_numbers == 1:
-            return False
-        elif grp_numbers == 2:
-            return True
-        elif grp_numbers == 3:
-            return grp_position != 2
-        else:
-            return grp_position % 2 == 0
         # /*for i in range(0, len(y_points)):
         #     if x < y_points[i][0]:
         #         break
